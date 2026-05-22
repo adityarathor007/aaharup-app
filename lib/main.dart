@@ -1,4 +1,5 @@
 import 'package:aaharup_app/core/theme/app_theme.dart';
+import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,9 +20,7 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Welcome to your Meal Planner App!')),
-      ),
+      builder: (context, state) => const AuthTestScreen(),
     ),
   ],
 );
