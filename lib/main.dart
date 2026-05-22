@@ -1,5 +1,7 @@
 import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_screen.dart';
+import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,24 +21,28 @@ final _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
-      path: '/',
-      builder: (context, state) => const AuthTestScreen(),
+        path: '/',
+    //   builder: (context, state) => const AuthTestScreen(),
+        builder: (context, state) => const MealPlannerScreen(),
     ),
-  ],
+    ],
 );
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final currentTheme = ref.watch(themeProvider);
+
     // Notice we use MaterialApp.router instead of ordinary MaterialApp
     return MaterialApp.router(
       title: 'AaharUp Meal Planner',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: currentTheme,
       // Hand routing control over to GoRouter
       routerConfig: _router,
     );

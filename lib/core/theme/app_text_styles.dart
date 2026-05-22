@@ -27,7 +27,7 @@ class AppTextStyles {
 
   static TextStyle get buttonText => GoogleFonts.plusJakartaSans(
     fontSize: 16.0,
-    fontWeight: FontWeight.w640,
+    fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
   );
 }
