@@ -144,7 +144,7 @@ class MealPlannerScreen extends ConsumerWidget {
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: isSelected
                                   ? Colors.white
-                                  : AppColors.textDark,
+                                  : Theme.of(context).colorScheme.onSurface ,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -204,7 +204,7 @@ class MealPlannerScreen extends ConsumerWidget {
         if (meal != null)
           Card(
             elevation: 0,
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: Colors.grey.shade100),
@@ -234,7 +234,7 @@ class MealPlannerScreen extends ConsumerWidget {
                           meal.name,
                           style: AppTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
@@ -311,9 +311,9 @@ class MealPlannerScreen extends ConsumerWidget {
                child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.add_circle_outline,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   size: 20,
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -321,7 +321,7 @@ class MealPlannerScreen extends ConsumerWidget {
                   '+ Add dish',
                   style: AppTextStyles.bodyLarge.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],

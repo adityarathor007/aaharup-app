@@ -1,6 +1,8 @@
+import 'package:aaharup_app/core/routing/scaffold_with_navbar.dart';
 import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,16 +18,47 @@ void main() {
   );
 }
 
-// Minimal placeholder router setup to demonstrate GoRouter logic
-final _router = GoRouter(
-  initialLocation: '/',
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
+
+
+final GoRouter _router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
+  initialLocation: '/plan', // Launch directly into the main plan view
   routes: [
-    GoRoute(
-        path: '/',
-    //   builder: (context, state) => const AuthTestScreen(),
-        builder: (context, state) => const MealPlannerScreen(),
+    // The ShellRoute injects your navigation bar wrapper around all nested sub-routes
+    ShellRoute(
+      navigatorKey: _shellNavigatorKey,
+      builder: (context, state, child) {
+        return ScaffoldWithNavBar(child: child);
+      },
+      routes: [
+        GoRoute(
+          path: '/',
+            builder: (context, state) => const AuthTestScreen(),
+        ),
+        GoRoute(
+          path: '/plan',
+          builder: (context, state) => const MealPlannerScreen(),
+        ),
+        GoRoute(
+          path: '/recipes',
+          builder: (context, state) => const RecipesScreen(),
+        ),
+        GoRoute(
+          path: '/grocery',
+          builder: (context, state) => const GroceryScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
+      ],
     ),
-    ],
+
+    // Note: Future Login or Auth screens will be placed out here,
+    // completely separate from the ShellRoute, so they won't show the navbar!
+  ],
 );
 
 class MyApp extends ConsumerWidget {
