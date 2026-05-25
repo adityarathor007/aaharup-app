@@ -1,6 +1,8 @@
 import 'package:aaharup_app/core/routing/scaffold_with_navbar.dart';
 import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
+import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
@@ -24,8 +26,10 @@ final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>()
 
 final GoRouter _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/plan', // Launch directly into the main plan view
+  initialLocation: '/login', // Launch directly into the main plan view
   routes: [
+    // Standalone Fullscreen Login Route - Completely removes the bottom navigation bar wrapper!
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     // The ShellRoute injects your navigation bar wrapper around all nested sub-routes
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -52,6 +56,10 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/discovery',
+          builder: (context, state) => const DiscoveryFeedWidget(),
         ),
       ],
     ),

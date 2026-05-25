@@ -2,11 +2,13 @@ import 'package:aaharup_app/core/theme/app_colors.dart';
 import 'package:aaharup_app/core/theme/app_spacing.dart';
 import 'package:aaharup_app/core/theme/app_text_styles.dart';
 import 'package:aaharup_app/features/meal_planner/domain/meal_plan_models.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_controller.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class MealPlannerScreen extends ConsumerWidget {
@@ -17,7 +19,7 @@ class MealPlannerScreen extends ConsumerWidget {
     final selectedDate = ref.watch(selectedDateProvider);
     final weekDays = ref.watch(currentWeekDaysProvider);
     final dailyPlan = ref.watch(dailyMealPlanProvider(selectedDate));
-    final themeMode = ref.watch(themeProvider);
+    // final themeMode = ref.watch(themeProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -163,11 +165,11 @@ class MealPlannerScreen extends ConsumerWidget {
               Expanded(
                 child: ListView(
                   children:[
-                    _buildMealSlot(context,'BREAKFAST', dailyPlan.breakfast),
+                    _buildMealSlot(context,ref,'BREAKFAST', dailyPlan.breakfast),
                     const SizedBox(height: AppSpacing.md),
-                    _buildMealSlot(context, 'LUNCH', dailyPlan.lunch),
+                    _buildMealSlot(context,ref, 'LUNCH', dailyPlan.lunch),
                     const SizedBox(height: AppSpacing.md),
-                    _buildMealSlot(context, 'DINNER', dailyPlan.dinner),
+                    _buildMealSlot(context,ref, 'DINNER', dailyPlan.dinner),
                     const SizedBox(height: AppSpacing.md),
 
                     // 5. NUTRITION TRACKING GOAL WIDGET
@@ -186,6 +188,7 @@ class MealPlannerScreen extends ConsumerWidget {
 
   Widget _buildMealSlot(
     BuildContext context,
+    WidgetRef ref,
     String title,
     ScheduledMeal? meal,
   ) {
@@ -299,7 +302,19 @@ class MealPlannerScreen extends ConsumerWidget {
             radius: const Radius.circular(12), // Matches button shape
             padding: EdgeInsets.zero, // Prevents layout shifting
             child: OutlinedButton(
-              onPressed: () {}, // Hooks up to AI engine selection sheets later
+              onPressed: () {
+                // 1. Set the active slot context (e.g., 'Breakfast', 'Lunch', 'Dinner')
+                // This instantly switches your backend carousel queries dynamically!
+                ref.read(activeSlotContextRecipientProvider.notifier).state =
+                    title;
+
+                // 2. Reset any previous temporary selection states
+                // ref.read(selectedDishIdProvider.notifier).state = null;
+
+                // 3. Navigate to your Netflix-style discovery screen
+                // Assuming your GoRouter path is configured as '/discovery'
+                context.push('/discovery');
+              },
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 64),
                 // Remove 'side' parameter entirely
@@ -308,7 +323,7 @@ class MealPlannerScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-               child: Row(
+              child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(

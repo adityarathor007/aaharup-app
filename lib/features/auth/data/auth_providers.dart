@@ -16,5 +16,11 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
   // We declare the return type as the abstract contract (AuthRepository)
   // But we return the concrete implementation containing the real code!
-  return AuthRepositoryImpl(client);  
+  return AuthRepositoryImpl(client);
+});
+
+// Tracks whether an active, unexpired access token sits in the local storage disk
+final authStateProvider = StateProvider<bool>((ref) {
+  // We initialize as false, and toggle to true once credentials verify successfully
+  return false;
 });
