@@ -4,6 +4,7 @@ import 'package:aaharup_app/core/theme/app_colors.dart';
 import 'package:aaharup_app/features/meal_planner/data/planner_providers.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
 import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/dish_detail_sheet.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,18 +94,18 @@ class DiscoveryFeedWidget extends ConsumerWidget {
             // 2. YOUR CAROUSEL FEED (Wrapped in Expanded so it occupies remaining space and scrolls independently)
             Expanded(
               child: isSearchActive
-              ? const _searchResultsGridWidget()
+              ? const _SearchResultsGridWidget()
               : _buildCarouselListView(categories,ref),
             ),
 
-            // 3. THE FIXED BOTTOM SUBMIT AREA
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              child: buildSubmitButton(context, ref), // Injected cleanly here!
-            ),
+            // // 3. THE FIXED BOTTOM SUBMIT AREA
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(
+            //     horizontal: 16.0,
+            //     vertical: 12.0,
+            //   ),
+            //   child: buildSubmitButton(context, ref), // Injected cleanly here!
+            // ),
           ],
         ),
       ),
@@ -174,9 +175,7 @@ class DiscoveryFeedWidget extends ConsumerWidget {
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final courseCategoryName = categories[index];
-        final asyncDishesRow = ref.watch(
-          carouselDishesProvider(courseCategoryName),
-        );
+        final asyncDishesRow = ref.watch(carouselDishesProvider(courseCategoryName),);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,8 +212,19 @@ class DiscoveryFeedWidget extends ConsumerWidget {
 
                       return GestureDetector(
                         onTap: () {
-                          ref.read(selectedDishIdProvider.notifier).state =
-                              dish.id;
+                        // 1. Keep card selection highlighting working perfectly
+                          ref.read(selectedDishIdProvider.notifier).state = dish.id;
+
+                          // 2. Launch the Netflix modal detail layer above the view space smoothly
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true, // Crucial parameter: Allows full height expanding behavior
+                            backgroundColor: Colors.transparent, // Ensures our custom corner round borders show up beautifully
+                            builder: (context) => FractionallySizedBox(
+                                heightFactor: 0.88, // Opens up to occupy 88% of full device view screen height
+                                child: DishDetailSheet(dish: dish),
+                            ),
+                          );
                         },
                         child: AnimatedContainer(
                           duration: Duration(milliseconds: 200),
@@ -312,8 +322,8 @@ class DiscoveryFeedWidget extends ConsumerWidget {
 }
 
 
-class _searchResultsGridWidget extends ConsumerWidget {
-  const _searchResultsGridWidget();
+class _SearchResultsGridWidget extends ConsumerWidget {
+  const _SearchResultsGridWidget();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -352,6 +362,20 @@ class _searchResultsGridWidget extends ConsumerWidget {
             return GestureDetector(
               onTap: () {
                 ref.read(selectedDishIdProvider.notifier).state = dish.id;
+
+                // 2. Launch the Netflix modal detail layer above the view space smoothly
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled:
+                      true, // Crucial parameter: Allows full height expanding behavior
+                  backgroundColor: Colors
+                      .transparent, // Ensures our custom corner round borders show up beautifully
+                  builder: (context) => FractionallySizedBox(
+                    heightFactor:
+                        0.88, // Opens up to occupy 88% of full device view screen height
+                    child: DishDetailSheet(dish: dish),
+                  ),
+                );
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),

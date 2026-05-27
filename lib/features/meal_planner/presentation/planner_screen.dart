@@ -1,9 +1,12 @@
 import 'package:aaharup_app/core/theme/app_colors.dart';
 import 'package:aaharup_app/core/theme/app_spacing.dart';
 import 'package:aaharup_app/core/theme/app_text_styles.dart';
+import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
+import 'package:aaharup_app/features/meal_planner/domain/dish_model.dart';
 import 'package:aaharup_app/features/meal_planner/domain/meal_plan_models.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/dish_detail_sheet.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -210,6 +213,9 @@ class MealPlannerScreen extends ConsumerWidget {
     String title,
     ScheduledMeal? meal,
   ) {
+
+    if(meal!=null) print(meal.id);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -222,91 +228,176 @@ class MealPlannerScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
+
+        // If meal already assigned for the slot
         if (meal != null)
-          Card(
-            elevation: 0,
-            color: Theme.of(context).cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey.shade100),
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.tealLight,
-                      borderRadius: BorderRadius.circular(12),
+          GestureDetector(
+            onTap: () async {
+              try{
+                //1. showing a loading indicator dialog since we need to fetch full dish metric from db
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.tealPrimary)),
+                );
+
+                //2.Fetch full dish entity details using the repository layer
+                // final fullRepository = ref.read(dishRepositoryProvider);
+
+                // Look up your global database by ID (ensure your API has a GET /dishes/{id} route)
+                final response = await ref.read(apiClientProvider).dio.get('/dishes/${meal.id}');
+                final fullDishEntity = Dish.fromJson(response.data);
+
+                if (context.mounted) {
+                  context.pop(); // Dismiss loading spinner indicator dialog safely
+
+                  // 3. Open the custom detailed popup sheet overlay layer
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => FractionallySizedBox(
+                      heightFactor: 0.88,
+                      // Pass isReadOnly: true to dynamically hide the bottom schedule button element canvas
+                      child: DishDetailSheet(dish: fullDishEntity, isReadOnly: true),
                     ),
-                    child: const Icon(
-                      Icons.fastfood,
-                      color: AppColors.tealPrimary,
-                    ), // Swapped with network images later
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          meal.name,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
+                  );
+                }
+              } catch (e) {
+                  if (context.mounted) {
+                    context.pop(); // Dismiss loading spinner
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to load dish profile details.')),
+                    );
+                  }
+                }
+            },
+            child: Card(
+              elevation: 0,
+              color: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade100),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.tealLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.fastfood,
+                        color: AppColors.tealPrimary,
+                      ), // Swapped with network images later
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            meal.name,
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.tealLight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${meal.calories.toInt()} kcal',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.tealPrimary,
-                                  fontWeight: FontWeight.bold,
+                          const SizedBox(height: AppSpacing.xs),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.tealLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${meal.calories.toInt()} kcal',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.tealPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.access_time,
-                              size: 12,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${meal.prepTimeMinutes}m',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.access_time,
+                                size: 12,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${meal.prepTimeMinutes}m',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // THE DELETE CROSS ICON ACTION BUTTON
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: Colors.grey.shade400,
+                      ),
+                      onPressed: () async {
+                        final targetDate = ref.read(selectedDateProvider);
+                        final dateStr = targetDate.toIso8601String().split(
+                          'T',
+                        )[0];
+
+                        // Optimistically hit your backend DELETE endpoint configuration path
+                        try {
+                          await ref
+                              .read(apiClientProvider)
+                              .dio
+                              .delete(
+                                '/planner/remove',
+                                queryParameters: {
+                                  'target_date': dateStr,
+                                  'slot_type':
+                                      title, // title represents 'Breakfast', 'Lunch', or 'Dinner'
+                                },
+                              );
+
+                          // Force layout streams network refetch synchronization loops
+                          ref.invalidate(dailyMealPlanProvider);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Removed $title selection mapping.',
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Failed to clear slot reservation.',
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      size: 20,
-                      color: Colors.grey.shade400,
-                    ),
-                    onPressed: () {},
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           )
