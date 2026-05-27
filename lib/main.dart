@@ -3,7 +3,7 @@ import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
-import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/planner_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:flutter/material.dart';

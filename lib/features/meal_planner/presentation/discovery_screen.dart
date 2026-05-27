@@ -1,168 +1,100 @@
+import 'dart:async';
+
 import 'package:aaharup_app/core/theme/app_colors.dart';
+import 'package:aaharup_app/features/meal_planner/data/planner_providers.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
-import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_controller.dart';
+import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class DiscoveryFeedWidget extends ConsumerWidget {
+  // 1. Declare a top-level or class-level nullable timer reference variable
   const DiscoveryFeedWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Looks at whether user clicked Breakfast, Lunch, or Dinner and pulls the valid rows
     final categories = ref.watch(targetCourseFiltersProvider);
+    final isSearchActive = ref.watch(isSearchActiveProvider);
+    final searchController = TextEditingController(text: ref.read(dishSearchQueryProvider));
+    Timer? _debounceTimer;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose a Dish'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: (){
+            if(isSearchActive){
+              // If search is active, back button exits search mode first
+              ref.read(isSearchActiveProvider.notifier).state = false;
+              ref.read(dishSearchQueryProvider.notifier).state = '';
+            }
+            else{
+              context.pop();
+            }
+          }
         ),
+
+        title: isSearchActive
+            ? TextField(
+                controller: searchController, //to show what is typed in this field
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Search recipes...',
+                  hintStyle: TextStyle(color: Colors.white60),
+                  border: InputBorder.none,
+                ),
+                onChanged: (value) {
+                  // Debounce or update state query to trigger API calls instantly
+                  // ref.read(dishSearchQueryProvider.notifier).state = value;
+
+                  // Cancel the previous timer if the user typed another letter before 350ms passed
+                  if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+
+                  // Start a new countdown timer
+                  _debounceTimer = Timer(const Duration(milliseconds: 350), () {
+                    // This code only runs after the user pauses typing for 350ms!
+                    ref.read(dishSearchQueryProvider.notifier).state = value;
+                  });
+                }
+            )
+            : const Text('Choose a Dish'),
+
+        actions: [
+        // DYNAMIC ICON BUTTON: Shows magnifying glass or clear button
+        if (!isSearchActive)
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => ref.read(isSearchActiveProvider.notifier).state = true,
+          )
+        else
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              searchController.clear();
+              ref.read(dishSearchQueryProvider.notifier).state = '';
+            },
+          ),
+        ],
       ),
       body: SafeArea(
 
         child: Column(
           children: [
-            // 1. SEARCH BAR & TAB BAR WORKSPACE (If you have them at the top)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text("Search and Segments go here"),
-            ),
+            // // 1. SEARCH BAR & TAB BAR WORKSPACE (If you have them at the top)
+            // const Padding(
+            //   padding: EdgeInsets.all(16.0),
+            //   child: Text("Search and Segments go here"),
+            // ),
 
             // 2. YOUR CAROUSEL FEED (Wrapped in Expanded so it occupies remaining space and scrolls independently)
             Expanded(
-              child: ListView.builder(
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final courseCategoryName = categories[index];
-                  final asyncDishesRow = ref.watch(
-                    carouselDishesProvider(courseCategoryName),
-                  );
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Row Title Header
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Text(
-                          courseCategoryName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-
-                      // Horizontal Netflix-style Card Scroller container
-                      SizedBox(
-                        height: 220,
-                        child: asyncDishesRow.when(
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (err, stack) => Text('Error loading elements: $err'),
-                          data: (dishesList) {
-                            if (dishesList.isEmpty)
-                              return const Text('No recipes listed in this section');
-
-                            return ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: dishesList.length,
-                              itemBuilder: (context, dIdx) {
-                                final dish = dishesList[dIdx];
-                                final selectedDishId = ref.watch(selectedDishIdProvider);
-                                final isSelected = selectedDishId == dish.id;
-
-                                return GestureDetector(
-                                  onTap: (){
-                                    ref.read(selectedDishIdProvider.notifier).state=dish.id;
-                                  },
-                                  child: AnimatedContainer(
-                                    duration: Duration(milliseconds: 200),
-                                    width: 160,
-                                    margin: const EdgeInsets.only(right: 16),
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: isSelected ? Colors.teal: Colors.transparent,
-                                        width: 2,
-                                      )
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Stack(
-                                            children:[
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.teal.shade50,
-                                                  borderRadius: BorderRadius.circular(16),
-                                                ),
-                                                child: const Center(
-                                                  child: Icon(
-                                                    Icons.restaurant,
-                                                    color: Colors.teal,
-                                                  ),
-                                                ),
-                                              ),
-                                              if (isSelected)
-                                                Positioned(
-                                                  top: 8,
-                                                  right: 8,
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(4),
-                                                    decoration: const BoxDecoration(
-                                                      color: Colors.teal,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.check,
-                                                      color: Colors.white,
-                                                      size: 16,
-                                                    ),
-                                                  ),
-                                                )
-                                            ]
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                          child: Text(
-                                            dish.name,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                          child: Text(
-                                            '${dish.cookTimeMins} mins',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    )
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+              child: isSearchActive
+              ? const _searchResultsGridWidget()
+              : _buildCarouselListView(categories,ref),
             ),
 
             // 3. THE FIXED BOTTOM SUBMIT AREA
@@ -212,6 +144,8 @@ class DiscoveryFeedWidget extends ConsumerWidget {
 
               if (success && context.mounted) {
                 // 1. Invalidate your calendar data provider to force an automatic layout reload
+                ref.read(isSearchActiveProvider.notifier).state = false;
+                ref.read(dishSearchQueryProvider.notifier).state = '';
                 ref.invalidate(dailyMealPlanProvider);
 
                 // 2. Pop the discovery screen and slide back to the main calendar smoothly
@@ -231,6 +165,276 @@ class DiscoveryFeedWidget extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+    );
+  }
+
+
+  Widget _buildCarouselListView(List<String> categories, WidgetRef ref) {
+    return ListView.builder(
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final courseCategoryName = categories[index];
+        final asyncDishesRow = ref.watch(
+          carouselDishesProvider(courseCategoryName),
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row Title Header
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: Text(
+                courseCategoryName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            // Horizontal Netflix-style Card Scroller container
+            SizedBox(
+              height: 220,
+              child: asyncDishesRow.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Text('Error loading elements: $err'),
+                data: (dishesList) {
+                  if (dishesList.isEmpty)
+                    return const Text('No recipes listed in this section');
+
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: dishesList.length,
+                    itemBuilder: (context, dIdx) {
+                      final dish = dishesList[dIdx];
+                      final selectedDishId = ref.watch(selectedDishIdProvider);
+                      final isSelected = selectedDishId == dish.id;
+
+                      return GestureDetector(
+                        onTap: () {
+                          ref.read(selectedDishIdProvider.notifier).state =
+                              dish.id;
+                        },
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          width: 160,
+                          margin: const EdgeInsets.only(right: 16),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.teal
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.teal.shade50,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.restaurant,
+                                          color: Colors.teal,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.teal,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                ),
+                                child: Text(
+                                  dish.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                ),
+                                child: Text(
+                                  '${dish.cookTimeMins} mins',
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+}
+
+
+class _searchResultsGridWidget extends ConsumerWidget {
+  const _searchResultsGridWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final searchResultsAsync = ref.watch(globalSearchQueryResultProvider);
+    final selectedDishId = ref.watch(selectedDishIdProvider);
+
+    return searchResultsAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator(color: Colors.teal)),
+      error: (err, stack) => Center(child: Text('Search Error: $err')),
+      data: (dishesList) {
+        if (dishesList.isEmpty) {
+          return const Center(
+            child: Text(
+              'No dishes found matching your query.',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(16.0),
+          // Sets fixed 2-column cross-axis count constraint layout rules
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio:
+                0.78, // Adjust ratio slightly to make text cards fit beautifully
+          ),
+          itemCount: dishesList.length,
+          itemBuilder: (context, index) {
+            final dish = dishesList[index];
+            final isSelected = selectedDishId == dish.id;
+
+            return GestureDetector(
+              onTap: () {
+                ref.read(selectedDishIdProvider.notifier).state = dish.id;
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected ? Colors.teal : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.teal.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.restaurant,
+                                color: Colors.teal,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.teal,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text(
+                        dish.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4.0,
+                        vertical: 2.0,
+                      ),
+                      child: Text(
+                        '${dish.cookTimeMins} mins',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

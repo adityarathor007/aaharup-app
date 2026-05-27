@@ -1,3 +1,4 @@
+
 class ScheduledMeal {
   final int id;
   final String name;
@@ -12,6 +13,20 @@ class ScheduledMeal {
     this.imageUrl,
     required this.prepTimeMinutes,
   });
+
+// ADD THIS FACTORY CONSTRUCTOR TO FIX THE ERROR:
+  factory ScheduledMeal.fromJson(Map<String, dynamic> json) {
+    return ScheduledMeal(
+      id: json['id'] as int,
+      name: json['name'] ?? 'Unnamed Dish',
+      // Safely parse num to double regardless of whether backend returns int or double
+      calories: (json['calories'] as num?)?.toDouble() ?? 0.0,
+      imageUrl: json['image_url'] as String?,
+      prepTimeMinutes:
+          json['cook_time_mins'] ??
+          20, // Maps perfectly to our Kaggle backend field
+    );
+  }
 }
 
 class DailyMealPlan {

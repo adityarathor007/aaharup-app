@@ -1,13 +1,7 @@
+import 'package:aaharup_app/features/meal_planner/domain/dish_repository.dart';
 import '../../../../core/network/api_client.dart';
 import '../domain/dish_model.dart';
 
-abstract class DishRepository {
-  Future<List<Dish>> fetchDishes({
-    String? searchQuery,
-    String? course,
-    String? cuisine,
-  });
-}
 
 class DishRepositoryImpl implements DishRepository {
   final ApiClient _apiClient;
@@ -18,6 +12,7 @@ class DishRepositoryImpl implements DishRepository {
     String? searchQuery,
     String? course,
     String? cuisine,
+    int? limit,
   }) async {
     try {
       // Setup dynamic structural query parameters matching FastAPI parameters map
@@ -32,6 +27,10 @@ class DishRepositoryImpl implements DishRepository {
 
       if (course != null && course != 'All') {
         queryParams['course'] = course;
+      }
+
+      if (limit != null) {
+        queryParams['limit'] = limit; // Passes your explicit row restriction value straight to FastAPI
       }
 
       final response = await _apiClient.dio.get(

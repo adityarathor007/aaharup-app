@@ -1,9 +1,10 @@
 import 'package:aaharup_app/core/theme/app_colors.dart';
 import 'package:aaharup_app/core/theme/app_spacing.dart';
 import 'package:aaharup_app/core/theme/app_text_styles.dart';
+import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
 import 'package:aaharup_app/features/meal_planner/domain/meal_plan_models.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
-import 'package:aaharup_app/features/meal_planner/presentation/meal_planner_controller.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +19,10 @@ class MealPlannerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref){
     final selectedDate = ref.watch(selectedDateProvider);
     final weekDays = ref.watch(currentWeekDaysProvider);
-    final dailyPlan = ref.watch(dailyMealPlanProvider(selectedDate));
+    // final dailyPlan = ref.watch(dailyMealPlanProvider);
     // final themeMode = ref.watch(themeProvider);
+    // Watch the asynchronous meal plan state
+    final dailyPlanAsync = ref.watch(dailyMealPlanProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -163,19 +166,34 @@ class MealPlannerScreen extends ConsumerWidget {
 
               // 4. DAILY MEAL SLOTS SECTION
               Expanded(
-                child: ListView(
-                  children:[
-                    _buildMealSlot(context,ref,'BREAKFAST', dailyPlan.breakfast),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildMealSlot(context,ref, 'LUNCH', dailyPlan.lunch),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildMealSlot(context,ref, 'DINNER', dailyPlan.dinner),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // 5. NUTRITION TRACKING GOAL WIDGET
-                    // _buildNutritionCard(dailyPlan.totalCalories),
-                  ]
-                )
+                child: dailyPlanAsync.when(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.tealPrimary,
+                    ),
+                  ),
+                  error: (err, stack) =>
+                      Center(child: Text('Sync Error: $err')),
+                  data: (dailyPlan) {
+                    return ListView(
+                      padding: AppSpacing.paddingHorizontalMd,
+                      children: [
+                        _buildMealSlot(
+                          context,
+                          ref,
+                          'Breakfast',
+                          dailyPlan.breakfast,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildMealSlot(context,ref, 'Lunch', dailyPlan.lunch),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildMealSlot(context,ref, 'Dinner', dailyPlan.dinner),
+                        // const SizedBox(height: AppSpacing.lg),
+                        // _buildNutritionCard(dailyPlan.totalCalories),
+                      ],
+                    );
+                  },
+                ),
               )
 
             ],
@@ -213,7 +231,7 @@ class MealPlannerScreen extends ConsumerWidget {
               side: BorderSide(color: Colors.grey.shade100),
             ),
             child: Padding(
-              padding: AppSpacing.paddingAllMd,
+              padding: EdgeInsets.all(16),
               child: Row(
                 children: [
                   Container(
