@@ -27,39 +27,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      final apiClient = ref.read(apiClientProvider);
+      await ref
+          .read(authStateProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text);
 
-      // Hit your FastAPI login endpoint
-      final response = await apiClient.dio.post(
-        '/auth/login',
-        data: {
-          'email': _emailController.text.trim(), // OAuth2 uses 'username' field by default
-          'password': _passwordController.text,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-        final accessToken = response.data['access_token'];
-        final refreshToken = response.data['refresh_token'];
-
-        // Save security credentials securely to disk parameters
-        await prefs.setString('access_token', accessToken);
-        await prefs.setString('refresh_token', refreshToken);
-
-        // Update routing authorization guard state trees
-        ref.read(authStateProvider.notifier).state = true;
-
-        if (mounted) {
-          context.go(
-            '/plan',
-          ); // Redirect cleanly straight to your calendar dashboard
-        }
+      if (mounted) {
+        context.go('/plan');
       }
     } catch (e) {
       setState(() {
-        print(e);
-        _errorMessage = "Invalid email or password. Please try again.";
+        _errorMessage = e.toString();
       });
     } finally {
       if (mounted) {

@@ -1,4 +1,5 @@
 // register providers
+import 'package:aaharup_app/features/auth/presentation/auth_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../domain/auth_repository.dart';
@@ -20,7 +21,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 // Tracks whether an active, unexpired access token sits in the local storage disk
-final authStateProvider = StateProvider<bool>((ref) {
-  // We initialize as false, and toggle to true once credentials verify successfully
-  return false;
+final authStateProvider= StateNotifierProvider<AuthController, AsyncValue<bool>>((ref) {
+  return AuthController(ref.read(authRepositoryProvider));
 });
