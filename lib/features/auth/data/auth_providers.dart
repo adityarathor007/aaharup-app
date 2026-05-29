@@ -12,7 +12,8 @@ final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final client = ref.watch(apiClientProvider);
 
-  // MOCK SETUP: Swap your app to this line for offline testing
+  // MOCK SETUP: Swap your app to this line for offline testingfinal isOnboardedProvider = StateProvider<bool>((ref) => false);
+
   // return MockAuthRepository();
 
   // We declare the return type as the abstract contract (AuthRepository)
@@ -22,5 +23,5 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 // Tracks whether an active, unexpired access token sits in the local storage disk
 final authStateProvider= StateNotifierProvider<AuthController, AsyncValue<bool>>((ref) {
-  return AuthController(ref.read(authRepositoryProvider));
+  return AuthController(ref,ref.read(authRepositoryProvider));
 });

@@ -19,6 +19,17 @@ class GroceryScreen extends StatelessWidget {
   );
 }
 
+class OnboardingScreen extends StatelessWidget {
+  const OnboardingScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Text('Onboarding Screen', style: AppTextStyles.h2),
+    ),
+  );
+}
+
+
 // class ProfileScreen extends StatelessWidget {
 //   const ProfileScreen({super.key});
 //   @override

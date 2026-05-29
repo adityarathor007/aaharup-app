@@ -26,23 +26,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
 
-    try {
-      await ref
-          .read(authStateProvider.notifier)
-          .login(_emailController.text.trim(), _passwordController.text);
+    // try {
+    //   await ref
+    //       .read(authStateProvider.notifier)
+    //       .login(_emailController.text.trim(), _passwordController.text);
 
-      if (mounted) {
-        context.go('/plan');
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    //   if (mounted) {
+    //     context.go('/plan');
+    //   }
+    // } catch (e) {
+    //   setState(() {
+    //     _errorMessage = e.toString();
+    //   });
+    // } finally {
+    //   if (mounted) {
+    //     setState(() => _isLoading = false);
+    //   }
+    // }
+    debugPrint("handle login clicked");
   }
 
   @override

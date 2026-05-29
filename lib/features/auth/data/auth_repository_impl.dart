@@ -1,5 +1,6 @@
 // concrete data class implementing that interface, translating data payloads directly into your ApiClient network executions.
 
+import 'package:aaharup_app/features/auth/domain/auth_response.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/token_manager.dart';
@@ -11,34 +12,60 @@ class AuthRepositoryImpl implements AuthRepository {
 
   AuthRepositoryImpl(this._apiClient);
 
-  @override
-  Future<void> register(String email, String password) async {
-    try {
-      await _apiClient.dio.post(
-        '/auth/register',
-        data: {'email': email, 'password': password},
-      );
-    } on DioException catch (e) {
-      final errorMessage = e.response?.data['detail'] ?? 'Registration failed';
-      throw Exception(errorMessage);
-    }
-  }
+  // @override
+  // Future<void> register(String email, String password) async {
+  //   try {
+  //     await _apiClient.dio.post(
+  //       '/auth/register',
+  //       data: {'email': email, 'password': password},
+  //     );
+  //   } on DioException catch (e) {
+  //     final errorMessage = e.response?.data['detail'] ?? 'Registration failed';
+  //     throw Exception(errorMessage);
+  //   }
+  // }
+
+  // @override
+  // Future<void> login(String email, String password) async {
+  //   try {
+  //     final response = await _apiClient.dio.post(
+  //       '/auth/login',
+  //       data: {'email': email, 'password': password},
+  //     );
+
+  //     final accessToken = response.data['access_token'];
+  //     final refreshToken = response.data['refresh_token'];
+
+  //     // Save credentials straight into our local persistent shared preference storage
+  //     await _tokenManager.saveTokens(accessToken, refreshToken);
+  //   } on DioException catch (e) {
+  //     final errorMessage = e.response?.data['detail'] ?? 'Login failed';
+  //     throw Exception(errorMessage);
+  //   }
+  // }
 
   @override
-  Future<void> login(String email, String password) async {
+  Future<bool> verifyPhoneNumber(String phoneNumber) async {
     try {
+      // 1. Post to your updated single universal FastAPI endpoint
       final response = await _apiClient.dio.post(
-        '/auth/login',
-        data: {'email': email, 'password': password},
+        '/auth/verify',
+        data: {'phone_number': phoneNumber},
       );
 
-      final accessToken = response.data['access_token'];
-      final refreshToken = response.data['refresh_token'];
+      // 2. Wrap the JSON payload data into our clean model instance
+      final authResponse = AuthResponse.fromJson(response.data);
 
-      // Save credentials straight into our local persistent shared preference storage
-      await _tokenManager.saveTokens(accessToken, refreshToken);
+      // 3. Save credentials straight into your persistent storage engine
+      await _tokenManager.saveTokens(
+        authResponse.accessToken,
+        authResponse.refreshToken,
+      );
+
+      return authResponse.isOnboarded;
     } on DioException catch (e) {
-      final errorMessage = e.response?.data['detail'] ?? 'Login failed';
+      final errorMessage =
+          e.response?.data['detail'] ?? 'Authentication failed';
       throw Exception(errorMessage);
     }
   }

@@ -26,65 +26,65 @@ void main() {
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
-
+final isOnboardedProvider = StateProvider<bool>((ref) => false);
 
 final routerProvider = Provider<GoRouter>((ref){
     final authState = ref.watch(authStateProvider);
+    final isOnboarded = ref.watch(isOnboardedProvider);
 
     return GoRouter(
-        // redirect: (context, state) {
-        //     final isLoggedIn = authState.value ?? false;
-
-        //     final isLoggingIn = state.matchedLocation == '/login';
-
-        //     if (!isLoggedIn && !isLoggingIn) {
-        //         return '/login';
-        //     }
-
-        //     if (isLoggedIn && isLoggingIn) {
-        //         return '/plan';
-        //     }
-
-        //     // Redirect root -> plan after login
-        //     if (isLoggedIn && state.matchedLocation == '/') {
-        //         return '/plan';
-        //     }
-
-        //     return null;
-        // },
         initialLocation: '/login',
+      //   redirect: (context, state) {
+      //     final isLoggedIn = authState.value ?? false;
+      //     final currentLoc = state.matchedLocation;
+
+      //     // 1. Create a checklist of routes that do NOT require a user to be logged in
+      //     final isAuthRoute = currentLoc == '/login' || currentLoc == '/register';
+
+      //     // 2. If the user is NOT logged in, and trying to go to a secured tab (like /plan)
+      //     if (!isLoggedIn && !isAuthRoute) {
+      //       return '/login'; // Kick them back to login barrier
+      //     }
+
+      //     // 3. If the user IS logged in, prevent them from seeing auth screens again
+      //     if (isLoggedIn && isAuthRoute) {
+      //       return '/plan'; // Send them straight to the main dashboard workspace
+      //     }
+
+      //     // Return null to allow the navigation to proceed normally
+      //     return null;
+      // },
+
         redirect: (context, state) {
           final isLoggedIn = authState.value ?? false;
+          debugPrint("redirect called");
+          debugPrint("auth=${authState.value}");
           final currentLoc = state.matchedLocation;
 
-          // 1. Create a checklist of routes that do NOT require a user to be logged in
-          final isAuthRoute = currentLoc == '/login' || currentLoc == '/register';
-
-          // 2. If the user is NOT logged in, and trying to go to a secured tab (like /plan)
-          if (!isLoggedIn && !isAuthRoute) {
-            return '/login'; // Kick them back to login barrier
+          // 1. If not logged in, force them back to login barrier
+          if (!isLoggedIn) {
+            return '/login';
           }
 
-          // 3. If the user IS logged in, prevent them from seeing auth screens again
-          if (isLoggedIn && isAuthRoute) {
-            return '/plan'; // Send them straight to the main dashboard workspace
+          // 2. If logged in but NOT onboarded (new user), trap them on the onboarding workflow screen
+          if (isLoggedIn && !isOnboarded) {
+            return '/onboarding';
           }
 
-          // Return null to allow the navigation to proceed normally
+          // 3. If logged in AND onboarded trying to view login screen, bypass straight to calendar
+          if (isLoggedIn && isOnboarded && currentLoc == '/login') {
+          // if (isLoggedIn && currentLoc == '/login') {
+            return '/plan';
+          }
+
           return null;
-      },
+        },
 
 
         routes:[
             GoRoute(
                 path: '/login',
                 builder: (context,state) => const LoginNewScreen()
-            ),
-
-            GoRoute(
-              path: '/register',
-              builder: (context, state) =>
-              const RegisterScreen(), // Injected target route entry point
             ),
 
             ShellRoute(
@@ -116,6 +116,12 @@ final routerProvider = Provider<GoRouter>((ref){
                     GoRoute(
                     path: '/discovery',
                     builder: (context, state) => const DiscoveryFeedWidget(),
+                    ),
+
+                    GoRoute(
+                      path: '/onboarding',
+                      builder: (context, state) =>
+                      const OnboardingScreen(), // Injected target route entry point
                     ),
                 ],
             )
