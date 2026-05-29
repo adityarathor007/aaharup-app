@@ -1,11 +1,11 @@
+import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../data/auth_providers.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -134,6 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: AppSpacing.xl),
 
                   // Submit Action Button
@@ -158,6 +159,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                   ),
+
+                  const SizedBox(height: 5,),
+
+                  TextButton(
+                    onPressed: () => context.go('/register'),
+                    child: const Text(
+                      "Don't have an account? Sign Up",
+                      style: TextStyle(color: AppColors.tealPrimary),
+                    ),
+                  )
                 ],
               ),
             ),

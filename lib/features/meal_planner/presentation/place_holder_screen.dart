@@ -19,12 +19,12 @@ class GroceryScreen extends StatelessWidget {
   );
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: Text('User Profile & Macro Analytics', style: AppTextStyles.h2),
-    ),
-  );
-}
+// class ProfileScreen extends StatelessWidget {
+//   const ProfileScreen({super.key});
+//   @override
+//   Widget build(BuildContext context) => Scaffold(
+//     body: Center(
+//       child: Text('User Profile & Macro Analytics', style: AppTextStyles.h2),
+//     ),
+//   );
+// }

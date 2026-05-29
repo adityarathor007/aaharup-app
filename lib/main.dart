@@ -2,10 +2,13 @@ import 'package:aaharup_app/core/routing/scaffold_with_navbar.dart';
 import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
-import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
+// import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
+import 'package:aaharup_app/features/auth/presentation/register.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
+import 'package:aaharup_app/features/profile/presentation/profile_screen.dart';
+import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,33 +32,59 @@ final routerProvider = Provider<GoRouter>((ref){
     final authState = ref.watch(authStateProvider);
 
     return GoRouter(
+        // redirect: (context, state) {
+        //     final isLoggedIn = authState.value ?? false;
+
+        //     final isLoggingIn = state.matchedLocation == '/login';
+
+        //     if (!isLoggedIn && !isLoggingIn) {
+        //         return '/login';
+        //     }
+
+        //     if (isLoggedIn && isLoggingIn) {
+        //         return '/plan';
+        //     }
+
+        //     // Redirect root -> plan after login
+        //     if (isLoggedIn && state.matchedLocation == '/') {
+        //         return '/plan';
+        //     }
+
+        //     return null;
+        // },
+        initialLocation: '/login',
         redirect: (context, state) {
-            final isLoggedIn = authState.value ?? false;
+          final isLoggedIn = authState.value ?? false;
+          final currentLoc = state.matchedLocation;
 
-            final isLoggingIn = state.matchedLocation == '/login';
+          // 1. Create a checklist of routes that do NOT require a user to be logged in
+          final isAuthRoute = currentLoc == '/login' || currentLoc == '/register';
 
-            if (!isLoggedIn && !isLoggingIn) {
-                return '/login';
-            }
+          // 2. If the user is NOT logged in, and trying to go to a secured tab (like /plan)
+          if (!isLoggedIn && !isAuthRoute) {
+            return '/login'; // Kick them back to login barrier
+          }
 
-            if (isLoggedIn && isLoggingIn) {
-                return '/plan';
-            }
+          // 3. If the user IS logged in, prevent them from seeing auth screens again
+          if (isLoggedIn && isAuthRoute) {
+            return '/plan'; // Send them straight to the main dashboard workspace
+          }
 
-            // Redirect root -> plan after login
-            if (isLoggedIn && state.matchedLocation == '/') {
-                return '/plan';
-            }
-
-            return null;
-        },
-
+          // Return null to allow the navigation to proceed normally
+          return null;
+      },
 
 
         routes:[
             GoRoute(
                 path: '/login',
-                builder: (context,state) => const LoginScreen()
+                builder: (context,state) => const LoginNewScreen()
+            ),
+
+            GoRoute(
+              path: '/register',
+              builder: (context, state) =>
+              const RegisterScreen(), // Injected target route entry point
             ),
 
             ShellRoute(
