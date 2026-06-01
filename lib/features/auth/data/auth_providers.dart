@@ -1,5 +1,8 @@
 // register providers
 import 'package:aaharup_app/features/auth/presentation/auth_controller.dart';
+import 'package:aaharup_app/features/meal_planner/data/planner_providers.dart';
+import 'package:aaharup_app/features/profile/presentation/profile_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../domain/auth_repository.dart';

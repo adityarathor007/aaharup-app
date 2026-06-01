@@ -1,3 +1,5 @@
+import 'package:aaharup_app/features/profile/presentation/profile_provider.dart';
+import 'package:aaharup_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,19 +22,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
    String? _errorMessage;
 
   Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
-    // // 1. Wipe security credentials completely off the local disk parameters
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove('access_token');
-    // await prefs.remove('refresh_token');
-
-    // // 2. Flip authorization tracking state trees to false
-    // // This immediately alerts GoRouter's redirect guard!
-    // ref.read(authStateProvider.notifier).state = false;
-
-    // // 3. Force route navigation straight back to the login page view
-    // if (context.mounted) {
-    //   context.go('/login');
-    // }
 
 
      try {
@@ -48,6 +37,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
     finally {
       if (mounted) {
+        AppRestartWrapper.restartApp(context);
         setState(() => _isLoading = false);
       }
     }
@@ -55,6 +45,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final userProfileAsync = ref.watch(userProfileProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Summary'),
@@ -69,34 +62,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               const SizedBox(height: AppSpacing.xl),
 
-              // User Avatar Graphic Placeholder Frame
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: AppColors.tealLight,
-                child: const Icon(
-                  Icons.person,
-                  size: 54,
-                  color: AppColors.tealPrimary,
+              userProfileAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24.0),
+                    child: CircularProgressIndicator(
+                      color: AppColors.tealPrimary,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+                error: (err, stack) => Center(
+                  child: Text(
+                    // 'Failed to load profile parameters',
+                    err.toString(),
+                    style: TextStyle(color: Colors.red.shade600, fontSize: 14),
+                  ),
+                ),
+                data: (user) {
+                  // Determine display username, fallback elegantly if skipped onboarding
+                  final displayUsername =
+                      (user.username != null && user.username!.isNotEmpty)
+                      ? user.username!
+                      : 'AaharUp Chef';
 
-              // Account Status Text Labels
-              Text(
-                'AaharUp Member',
-                style: AppTextStyles.h1.copyWith(fontSize: 24),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Account verified successfully',
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade500),
+                  // Prioritize phone number for Indian audience context, fallback to email
+                  final displayIdentifier =
+                      user.phoneNumber ?? user.email ?? 'No contact linked';
+
+                  return Column(
+                    children: [
+                      // User Avatar Graphic Placeholder Frame
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: AppColors.tealLight,
+                        child: const Icon(
+                          Icons.person,
+                          size: 54,
+                          color: AppColors.tealPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Dynamic Account Status Text Labels
+                      Text(
+                        displayUsername,
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        displayIdentifier,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      // Explicit placeholder warning badge if they skipped onboarding username profile registration
+                      if (user.username!.isEmpty) ...[
+                        const SizedBox(height: 12),
+                        ActionChip(
+                          backgroundColor: Colors.orange.shade50,
+                          side: BorderSide(color: Colors.orange.shade200),
+                          label: const Text(
+                            'Complete Profile Setup',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () {
+                            context.go(
+                              '/onboarding',
+                            ); // Let them claim their username easily
+                          },
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
 
               const Spacer(), // Pushes the logout button cleanly to the bottom
 
               // Premium High-Contrast Logout Button Card Panel
 
-             ElevatedButton(
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 54),
                   backgroundColor: _isLoading ? Colors.grey.shade100 : Colors.red.shade50,

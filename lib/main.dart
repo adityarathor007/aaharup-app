@@ -2,6 +2,7 @@ import 'package:aaharup_app/core/routing/scaffold_with_navbar.dart';
 import 'package:aaharup_app/core/theme/app_theme.dart';
 import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
+import 'package:aaharup_app/features/auth/presentation/onboarding_screen.dart';
 // import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/register.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
@@ -14,17 +15,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-void main() {
-  // Ensure native bindings are active before loading local storage systems later
-  WidgetsFlutterBinding.ensureInitialized();
+class AppRestartWrapper extends StatefulWidget {
+  final Widget child;
+  const AppRestartWrapper({super.key, required this.child});
 
-  runApp(
-    // The ProviderScope widget acts as the master engine for all Riverpod code
-    const ProviderScope(child: MyApp()),
-  );
+  static void restartApp(BuildContext context) {
+    context.findAncestorStateOfType<_AppRestartWrapperState>()?.restart();
+  }
+
+  @override
+  State<AppRestartWrapper> createState() => _AppRestartWrapperState();
 }
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+class _AppRestartWrapperState extends State<AppRestartWrapper> {
+  Key _key = UniqueKey();
+
+  void restart() {
+    setState(() {
+      // Changing the structural Key forces Flutter to kill the old ProviderScope
+      // and spawn a brand-new one with zero memory pollution!
+      _key = UniqueKey();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(
+      key: _key,
+      child: ProviderScope(child: widget.child),
+    );
+  }
+}
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const AppRestartWrapper(child: MyApp()));
+}
+
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
 final isOnboardedProvider = StateProvider<bool>((ref) => false);
 
@@ -34,50 +61,26 @@ final routerProvider = Provider<GoRouter>((ref){
 
     return GoRouter(
         initialLocation: '/login',
-      //   redirect: (context, state) {
-      //     final isLoggedIn = authState.value ?? false;
-      //     final currentLoc = state.matchedLocation;
-
-      //     // 1. Create a checklist of routes that do NOT require a user to be logged in
-      //     final isAuthRoute = currentLoc == '/login' || currentLoc == '/register';
-
-      //     // 2. If the user is NOT logged in, and trying to go to a secured tab (like /plan)
-      //     if (!isLoggedIn && !isAuthRoute) {
-      //       return '/login'; // Kick them back to login barrier
-      //     }
-
-      //     // 3. If the user IS logged in, prevent them from seeing auth screens again
-      //     if (isLoggedIn && isAuthRoute) {
-      //       return '/plan'; // Send them straight to the main dashboard workspace
-      //     }
-
-      //     // Return null to allow the navigation to proceed normally
-      //     return null;
-      // },
 
         redirect: (context, state) {
-          final isLoggedIn = authState.value ?? false;
-          debugPrint("redirect called");
-          debugPrint("auth=${authState.value}");
-          final currentLoc = state.matchedLocation;
+            final isLoggedIn = authState.value ?? false;
+            // debugPrint("redirect called");
+            // debugPrint("auth=${authState.value}");
+            final currentLoc = state.matchedLocation;
 
-          // 1. If not logged in, force them back to login barrier
-          if (!isLoggedIn) {
-            return '/login';
-          }
+            // 1. If not logged in, force them back to login barrier
+            if (!isLoggedIn) {
+                return '/login';
+            }
 
-          // 2. If logged in but NOT onboarded (new user), trap them on the onboarding workflow screen
-          if (isLoggedIn && !isOnboarded) {
-            return '/onboarding';
-          }
+            // 2. If logged in and explicitly trying to hit login/register screens
+            if (isLoggedIn && (currentLoc == '/login' || currentLoc == '/register')) {
+            // New users go to onboarding first, existing users go straight to dashboard
+                return isOnboarded ? '/plan' : '/onboarding';
+            }
 
-          // 3. If logged in AND onboarded trying to view login screen, bypass straight to calendar
-          if (isLoggedIn && isOnboarded && currentLoc == '/login') {
-          // if (isLoggedIn && currentLoc == '/login') {
-            return '/plan';
-          }
-
-          return null;
+            // Allow all other transitions (like clicking Skip on Onboarding to visit /plan) to pass cleanly
+            return null;
         },
 
 
@@ -85,6 +88,11 @@ final routerProvider = Provider<GoRouter>((ref){
             GoRoute(
                 path: '/login',
                 builder: (context,state) => const LoginNewScreen()
+            ),
+
+            GoRoute(
+              path: '/onboarding',
+              builder: (context, state) => const OnboardingScreen(),
             ),
 
             ShellRoute(
@@ -117,12 +125,6 @@ final routerProvider = Provider<GoRouter>((ref){
                     path: '/discovery',
                     builder: (context, state) => const DiscoveryFeedWidget(),
                     ),
-
-                    GoRoute(
-                      path: '/onboarding',
-                      builder: (context, state) =>
-                      const OnboardingScreen(), // Injected target route entry point
-                    ),
                 ],
             )
             // Note: Future Login or Auth screens will be placed out here,
@@ -131,50 +133,6 @@ final routerProvider = Provider<GoRouter>((ref){
 
     );
 });
-
-// final GoRouter _router = GoRouter(
-//   navigatorKey: _rootNavigatorKey,
-//   initialLocation: '/login', // Launch directly into the main plan view
-//   routes: [
-//     // Standalone Fullscreen Login Route - Completely removes the bottom navigation bar wrapper!
-//     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-//     // The ShellRoute injects your navigation bar wrapper around all nested sub-routes
-//     ShellRoute(
-//       navigatorKey: _shellNavigatorKey,
-//       builder: (context, state, child) {
-//         return ScaffoldWithNavBar(child: child);
-//       },
-//       routes: [
-//         GoRoute(
-//           path: '/',
-//             builder: (context, state) => const AuthTestScreen(),
-//         ),
-//         GoRoute(
-//           path: '/plan',
-//           builder: (context, state) => const MealPlannerScreen(),
-//         ),
-//         GoRoute(
-//           path: '/recipes',
-//           builder: (context, state) => const RecipesScreen(),
-//         ),
-//         GoRoute(
-//           path: '/grocery',
-//           builder: (context, state) => const GroceryScreen(),
-//         ),
-//         GoRoute(
-//           path: '/profile',
-//           builder: (context, state) => const ProfileScreen(),
-//         ),
-//         GoRoute(
-//           path: '/discovery',
-//           builder: (context, state) => const DiscoveryFeedWidget(),
-//         ),
-//       ],
-//     ),
-
-//
-//   ],
-// );
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});

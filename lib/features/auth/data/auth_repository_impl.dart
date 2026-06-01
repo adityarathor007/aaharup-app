@@ -1,7 +1,10 @@
 // concrete data class implementing that interface, translating data payloads directly into your ApiClient network executions.
 
 import 'package:aaharup_app/features/auth/domain/auth_response.dart';
+import 'package:aaharup_app/features/profile/presentation/profile_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/token_manager.dart';
 import '../domain/auth_repository.dart';
@@ -56,6 +59,9 @@ class AuthRepositoryImpl implements AuthRepository {
       // 2. Wrap the JSON payload data into our clean model instance
       final authResponse = AuthResponse.fromJson(response.data);
 
+      debugPrint("current user's phone number: ${authResponse.phoneNumber}");
+      debugPrint("Token saved");
+
       // 3. Save credentials straight into your persistent storage engine
       await _tokenManager.saveTokens(
         authResponse.accessToken,
@@ -71,7 +77,48 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> logout() async {
+  Future<void> submitOnboardingUsername(String username) async {
+    try{
+      await _apiClient.dio.post(
+        '/auth/onboard',
+        data: {'username': username},
+      );
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data['detail'] ?? 'Onboarding failed';
+      throw Exception(errorMessage);
+    }
+  }
+
+  Future<bool> signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    if (googleUser == null) {
+      throw Exception('Google sign in cancelled');
+    }
+
+    final googleAuth = await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await FirebaseAuth.instance.signInWithCredential(
+      credential,
+    );
+
+    final idToken = await userCredential.user!.getIdToken();
+
+    final response = await dio.post(
+      '/auth/google',
+      data: {'id_token': idToken},
+    );
+
+    return response.data['is_onboarded'];
+  }
+
+  @override
+  Future<void> logout(Ref ref) async {
     await _tokenManager.clearTokens();
   }
 }

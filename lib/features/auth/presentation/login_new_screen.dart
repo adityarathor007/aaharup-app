@@ -47,7 +47,7 @@ class _LoginNewScreenState extends ConsumerState<LoginNewScreen>{
         // final response = await apiClient.dio.post('/auth/verify', data: {
         //     'phone_number': fullPhoneNumber,
         // });
-        
+
         await ref
           .read(authStateProvider.notifier)
           .continueWithPhone(fullPhoneNumber);
@@ -315,9 +315,12 @@ class _LoginNewScreenState extends ConsumerState<LoginNewScreen>{
                         Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                            _buildSocialIconButton('assets/icons/google.png', () {
-                                // Triggers Google Auth provider verify loops map execution
-                            }),
+                            _buildSocialIconButton('assets/icons/google.png', () async {
+                                await ref
+                                    .read(authStateProvider.notifier)
+                                    .continueWithGoogle();
+                              },
+                            ),
                             const SizedBox(width: 16),
                             _buildSocialIconButton('assets/icons/apple.png', () {}, isApple: true),
                             const SizedBox(width: 16),
