@@ -10,7 +10,9 @@ import 'package:aaharup_app/features/meal_planner/presentation/planner_screen.da
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/features/profile/presentation/profile_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';
+import 'package:aaharup_app/firebase_options.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -47,8 +49,12 @@ class _AppRestartWrapperState extends State<AppRestartWrapper> {
   }
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const AppRestartWrapper(child: MyApp()));
 }
 

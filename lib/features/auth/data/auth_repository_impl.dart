@@ -3,8 +3,10 @@
 import 'package:aaharup_app/features/auth/domain/auth_response.dart';
 import 'package:aaharup_app/features/profile/presentation/profile_provider.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/token_manager.dart';
 import '../domain/auth_repository.dart';
@@ -47,75 +49,94 @@ class AuthRepositoryImpl implements AuthRepository {
   //   }
   // }
 
-  @override
-  Future<bool> verifyPhoneNumber(String phoneNumber) async {
+    @override
+    Future<bool> verifyPhoneNumber(String phoneNumber) async {
     try {
-      // 1. Post to your updated single universal FastAPI endpoint
-      final response = await _apiClient.dio.post(
+        // 1. Post to your updated single universal FastAPI endpoint
+        final response = await _apiClient.dio.post(
         '/auth/verify',
         data: {'phone_number': phoneNumber},
-      );
+        );
 
-      // 2. Wrap the JSON payload data into our clean model instance
-      final authResponse = AuthResponse.fromJson(response.data);
+        // 2. Wrap the JSON payload data into our clean model instance
+        final authResponse = AuthResponse.fromJson(response.data);
 
-      debugPrint("current user's phone number: ${authResponse.phoneNumber}");
-      debugPrint("Token saved");
+        debugPrint("current user's phone number: ${authResponse.phoneNumber}");
+        debugPrint("Token saved");
 
-      // 3. Save credentials straight into your persistent storage engine
-      await _tokenManager.saveTokens(
+        // 3. Save credentials straight into your persistent storage engine
+        await _tokenManager.saveTokens(
         authResponse.accessToken,
         authResponse.refreshToken,
-      );
+        );
 
-      return authResponse.isOnboarded;
+        return authResponse.isOnboarded;
     } on DioException catch (e) {
-      final errorMessage =
-          e.response?.data['detail'] ?? 'Authentication failed';
-      throw Exception(errorMessage);
+        final errorMessage =
+            e.response?.data['detail'] ?? 'Authentication failed';
+        throw Exception(errorMessage);
     }
-  }
+    }
 
-  @override
-  Future<void> submitOnboardingUsername(String username) async {
+    @override
+    Future<void> submitOnboardingUsername(String username) async {
     try{
-      await _apiClient.dio.post(
+        await _apiClient.dio.post(
         '/auth/onboard',
         data: {'username': username},
-      );
+        );
     } on DioException catch (e) {
-      final errorMessage = e.response?.data['detail'] ?? 'Onboarding failed';
-      throw Exception(errorMessage);
+        final errorMessage = e.response?.data['detail'] ?? 'Onboarding failed';
+        throw Exception(errorMessage);
     }
-  }
-
-  Future<bool> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    if (googleUser == null) {
-      throw Exception('Google sign in cancelled');
     }
 
-    final googleAuth = await googleUser.authentication;
+    @override
+    Future<bool> signInWithGoogle() async {
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+    final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+    await googleSignIn.initialize();
 
-    final userCredential = await FirebaseAuth.instance.signInWithCredential(
-      credential,
-    );
+    try{
+        final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
 
-    final idToken = await userCredential.user!.getIdToken();
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-    final response = await dio.post(
-      '/auth/google',
-      data: {'id_token': idToken},
-    );
+        final credential = GoogleAuthProvider.credential(
+            idToken: googleAuth.idToken,
+            // accessToken: googleAuth.accessToken,
+        );
 
-    return response.data['is_onboarded'];
-  }
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(
+            credential,
+        );
+
+        final firebaseToken = await userCredential.user!.getIdToken();
+
+        final response = await _apiClient.dio.post(
+            '/auth/google',
+            data: {'id_token': firebaseToken},
+        );
+
+        final authResponse = AuthResponse.fromJson(response.data);
+
+        // 3. Save credentials straight into your persistent storage engine
+        await _tokenManager.saveTokens(
+          authResponse.accessToken,
+          authResponse.refreshToken,
+        );
+
+        return response.data['is_onboarded'];
+    }
+    on FirebaseAuthException catch (e) {
+        debugPrint(e.message);
+        return false;
+    } catch (e) {
+        debugPrint(e.toString());
+        return false;
+    }
+
+    }
 
   @override
   Future<void> logout(Ref ref) async {
