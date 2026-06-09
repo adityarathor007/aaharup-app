@@ -43,18 +43,10 @@ class _LoginNewScreenState extends ConsumerState<LoginNewScreen>{
         // Prepend India country code cleanly before hitting the network stack
         final fullPhoneNumber = '+91$rawInput';
 
-        // final apiClient = ref.read(apiClientProvider);
-        // final response = await apiClient.dio.post('/auth/verify', data: {
-        //     'phone_number': fullPhoneNumber,
-        // });
-
         await ref
           .read(authStateProvider.notifier)
           .continueWithPhone(fullPhoneNumber);
 
-        // if (mounted) {
-        //     context.go('/plan');
-        // }
         } catch (e) {
         setState(() {
             _errorMessage = 'Something went wrong. Please try again.';

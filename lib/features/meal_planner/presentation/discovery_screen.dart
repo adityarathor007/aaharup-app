@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:aaharup_app/core/theme/app_colors.dart';
 import 'package:aaharup_app/features/meal_planner/data/planner_providers.dart';
+import 'package:aaharup_app/features/meal_planner/domain/dish_model.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
 import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/dish_detail_sheet.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -199,8 +201,9 @@ class DiscoveryFeedWidget extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Text('Error loading elements: $err'),
                 data: (dishesList) {
-                  if (dishesList.isEmpty)
+                  if (dishesList.isEmpty) {
                     return const Text('No recipes listed in this section');
+                  }
 
                   return ListView.builder(
                     scrollDirection: Axis.horizontal,
@@ -251,13 +254,17 @@ class DiscoveryFeedWidget extends ConsumerWidget {
                                         color: Colors.teal.shade50,
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.restaurant,
-                                          color: Colors.teal,
+                                      child: Center(
+                                        // child: Icon(
+                                        //   Icons.restaurant,
+                                        //   color: Colors.teal,
+                                        // ),
+                                            child:  dishImage(context,dish),
+
                                         ),
                                       ),
-                                    ),
+
+
                                     if (isSelected)
                                       Positioned(
                                         top: 8,
@@ -274,6 +281,7 @@ class DiscoveryFeedWidget extends ConsumerWidget {
                                             size: 16,
                                           ),
                                         ),
+
                                       ),
                                   ],
                                 ),
@@ -320,7 +328,6 @@ class DiscoveryFeedWidget extends ConsumerWidget {
   }
 
 }
-
 
 class _SearchResultsGridWidget extends ConsumerWidget {
   const _SearchResultsGridWidget();
@@ -398,12 +405,13 @@ class _SearchResultsGridWidget extends ConsumerWidget {
                               color: Colors.teal.shade50,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.restaurant,
-                                color: Colors.teal,
-                                size: 28,
-                              ),
+                            child: Center(
+                                child: dishImage(context,dish),
+                            //   child: Icon(
+                            //     Icons.restaurant,
+                            //     color: Colors.teal,
+                            //     size: 28,
+                            //   ),
                             ),
                           ),
                           if (isSelected)
@@ -461,4 +469,37 @@ class _SearchResultsGridWidget extends ConsumerWidget {
       },
     );
   }
+}
+
+Widget dishImage(BuildContext context, Dish dish) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(16),
+    child: dish.imageUrl != null && dish.imageUrl!.isNotEmpty
+        ? CachedNetworkImage(
+            imageUrl: dish.imageUrl!,
+            fit: BoxFit.cover,
+
+            placeholder: (context, url) => Container(
+              color: const Color(0xFFF1F5F9),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF0D9488),
+                  strokeWidth: 2.5,
+                ),
+              ),
+            ),
+
+            errorWidget: (context, url, error) => Container(
+              color: const Color(0xFFFEF2F2),
+              child: Center(
+                child: Icon(
+                  Icons.broken_image_rounded,
+                  color: Colors.red,
+                  size: 48,
+                ),
+              ),
+            ),
+          )
+        : const Center(child: Icon(Icons.restaurant, size: 48)),
+  );
 }

@@ -6,10 +6,11 @@ import 'package:aaharup_app/features/auth/presentation/onboarding_screen.dart';
 // import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/register.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/dish_image_test_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/features/profile/presentation/profile_screen.dart';
-import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';
+import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';  
 import 'package:aaharup_app/firebase_options.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -117,7 +118,7 @@ final routerProvider = Provider<GoRouter>((ref){
                     ),
                     GoRoute(
                     path: '/recipes',
-                    builder: (context, state) => const RecipesScreen(),
+                    builder: (context, state) => const DishImageTestScreen(),
                     ),
                     GoRoute(
                     path: '/grocery',

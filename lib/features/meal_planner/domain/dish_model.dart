@@ -8,6 +8,7 @@ class Dish {
   final String courseType;
   final String dietType;
   final int cookTimeMins;
+  final String? imageUrl;
   final double? calories;
   final double? protein;
   final double? carbs;
@@ -23,6 +24,7 @@ class Dish {
     required this.courseType,
     required this.dietType,
     required this.cookTimeMins,
+    this.imageUrl,
     this.calories,
     this.protein,
     this.carbs,
@@ -40,6 +42,7 @@ class Dish {
       courseType: json['course_type'] ?? 'Main Course',
       dietType: json['diet_type'] ?? 'General',
       cookTimeMins: json['cook_time_mins'] ?? 20,
+      imageUrl: json['image_storage_path'],
       calories: (json['calories'] as num?)?.toDouble(),
       protein: (json['protein'] as num?)?.toDouble(),
       carbs: (json['carbs'] as num?)?.toDouble(),

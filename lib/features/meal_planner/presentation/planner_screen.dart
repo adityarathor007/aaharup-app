@@ -9,6 +9,7 @@ import 'package:aaharup_app/features/meal_planner/presentation/discovery_control
 import 'package:aaharup_app/features/meal_planner/presentation/dish_detail_sheet.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,7 +215,7 @@ class MealPlannerScreen extends ConsumerWidget {
     ScheduledMeal? meal,
   ) {
 
-    if(meal!=null) print(meal.id);
+    // if(meal!=null) print(meal.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,10 +291,11 @@ class MealPlannerScreen extends ConsumerWidget {
                         color: AppColors.tealLight,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.fastfood,
-                        color: AppColors.tealPrimary,
-                      ), // Swapped with network images later
+                      child: dishImage(context, meal)
+                      // child: const Icon(
+                      //   Icons.fastfood,
+                      //   color: AppColors.tealPrimary,
+                      // ), // Swapped with network images later
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -456,4 +458,37 @@ class MealPlannerScreen extends ConsumerWidget {
     );
   }
 
+}
+
+Widget dishImage(BuildContext context, ScheduledMeal meal) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(16),
+    child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
+        ? CachedNetworkImage(
+            imageUrl: meal.imageUrl!,
+            fit: BoxFit.cover,
+
+            placeholder: (context, url) => Container(
+              color: const Color(0xFFF1F5F9),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF0D9488),
+                  strokeWidth: 2.5,
+                ),
+              ),
+            ),
+
+            errorWidget: (context, url, error) => Container(
+              color: const Color(0xFFFEF2F2),
+              child: Center(
+                child: Icon(
+                  Icons.broken_image_rounded,
+                  color: Colors.red,
+                  size: 48,
+                ),
+              ),
+            ),
+          )
+        : const Center(child: Icon(Icons.restaurant, size: 48)),
+  );
 }
