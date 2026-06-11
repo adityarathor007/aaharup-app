@@ -1,4 +1,8 @@
 // register providers
+import 'package:aaharup_app/features/auth/presentation/auth_controller.dart';
+import 'package:aaharup_app/features/meal_planner/data/planner_providers.dart';
+import 'package:aaharup_app/features/profile/presentation/profile_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../domain/auth_repository.dart';
@@ -11,7 +15,8 @@ final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final client = ref.watch(apiClientProvider);
 
-  // MOCK SETUP: Swap your app to this line for offline testing
+  // MOCK SETUP: Swap your app to this line for offline testingfinal isOnboardedProvider = StateProvider<bool>((ref) => false);
+
   // return MockAuthRepository();
 
   // We declare the return type as the abstract contract (AuthRepository)
@@ -20,7 +25,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 // Tracks whether an active, unexpired access token sits in the local storage disk
-final authStateProvider = StateProvider<bool>((ref) {
-  // We initialize as false, and toggle to true once credentials verify successfully
-  return false;
+final authStateProvider= StateNotifierProvider<AuthController, AsyncValue<bool>>((ref) {
+  return AuthController(ref,ref.read(authRepositoryProvider));
 });

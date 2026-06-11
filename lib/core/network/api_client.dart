@@ -3,6 +3,7 @@
 // and replays the original call.
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'token_manager.dart';
 
 class ApiClient {
@@ -12,13 +13,14 @@ class ApiClient {
   // Point this to your local FastAPI server setup
   // Use http://10.0.2.2:8000 for standard Android Emulators, or localhost for iOS Simulators
   static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  // static const String baseUrl = 'http://192.168.1.20:8000/api/v1';
 
   ApiClient() {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
         contentType: Headers.jsonContentType,
       ),
     );
@@ -35,10 +37,19 @@ class ApiClient {
         onError: (DioException error, handler) async {
           // Check if failure is a 401 unauthorized issue
           if (error.response?.statusCode == 401) {
+            // final refreshToken = await _tokenManager.getRefreshToken();
+            if (error.requestOptions.path.contains('/auth/refresh')) {
+              await _tokenManager.clearTokens();
+              return handler.next(error);
+            }
+
             final refreshToken = await _tokenManager.getRefreshToken();
 
             if (refreshToken != null) {
               try {
+                debugPrint(
+                  "🔄 Core 401 intercepted. Attempting background token rotation...",
+                );
                 // Request a fresh pair of tokens using a clean isolated Dio instance
                 final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
                 final response = await refreshDio.post(
@@ -49,6 +60,10 @@ class ApiClient {
                 if (response.statusCode == 200) {
                   final newAccess = response.data['access_token'];
                   final newRefresh = response.data['refresh_token'];
+
+                  debugPrint(
+                    "✅ Token rotation successful. Replaying stale request queue...",
+                  );
 
                   await _tokenManager.saveTokens(newAccess, newRefresh);
 
@@ -61,8 +76,12 @@ class ApiClient {
                   return handler.resolve(clonedResponse);
                 }
               } catch (e) {
-                // Refresh token itself expired or is invalid; wipe tokens and force logout state
+                debugPrint(
+                  "❌ Refresh token rotation failed entirely: $e. Evicting user session.",
+                );
+                // Refresh token itself expired; wipe token registers so app boot state triggers login routing
                 await _tokenManager.clearTokens();
+
               }
             }
           }

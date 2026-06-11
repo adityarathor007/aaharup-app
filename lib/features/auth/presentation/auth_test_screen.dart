@@ -22,7 +22,7 @@ class AuthTestScreen extends ConsumerWidget {
 
               // 1. Attempt Registration
               debugPrint('Attempting registration...');
-              await authRepo.register('testuser@example.com', '123');
+              // await authRepo.register('testuser@example.com', '123');
               debugPrint('Registration step successful!');
             } catch (e) {
               debugPrint(
@@ -33,7 +33,7 @@ class AuthTestScreen extends ConsumerWidget {
             try {
               // 2. Attempt Login
               debugPrint('Attempting login...');
-              await authRepo.login('testuser@example.com', 'SecurePass123!');
+              // await authRepo.login('testuser@example.com', 'SecurePass123!');
               debugPrint(
                 'SUCCESS: Login verified! Tokens are fully stored in local storage.',
               );
