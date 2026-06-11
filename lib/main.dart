@@ -1,16 +1,18 @@
 import 'package:aaharup_app/core/routing/scaffold_with_navbar.dart';
 import 'package:aaharup_app/core/theme/app_theme.dart';
+import 'package:aaharup_app/features/ai_search/presentation/discover_screen.dart';
 import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:aaharup_app/features/auth/presentation/auth_test_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/onboarding_screen.dart';
 // import 'package:aaharup_app/features/auth/presentation/login_screen.dart';
 import 'package:aaharup_app/features/auth/presentation/register.dart';
-import 'package:aaharup_app/features/meal_planner/presentation/discovery_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/add_dish_tab_screen.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/recipe_search_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/dish_image_test_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/place_holder_screen.dart';
 import 'package:aaharup_app/features/profile/presentation/profile_screen.dart';
-import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';  
+import 'package:aaharup_app/features/auth/presentation/login_new_screen.dart';
 import 'package:aaharup_app/firebase_options.dart';
 import 'package:aaharup_app/shared/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -82,8 +84,9 @@ final routerProvider = Provider<GoRouter>((ref){
 
             // 2. If logged in and explicitly trying to hit login/register screens
             if (isLoggedIn && (currentLoc == '/login' || currentLoc == '/register')) {
-            // New users go to onboarding first, existing users go straight to dashboard
-                return isOnboarded ? '/plan' : '/onboarding';
+            // // New users go to onboarding first, existing users go straight to dashboard
+            //     return isOnboarded ? '/plan' : '/onboarding';
+              return '/plan';
             }
 
             // Allow all other transitions (like clicking Skip on Onboarding to visit /plan) to pass cleanly
@@ -129,8 +132,8 @@ final routerProvider = Provider<GoRouter>((ref){
                     builder: (context, state) => const ProfileScreen(),
                     ),
                     GoRoute(
-                    path: '/discovery',
-                    builder: (context, state) => const DiscoveryFeedWidget(),
+                    path: '/add-dish',
+                    builder: (context, state) => const AddDishTabsScreen(),
                     ),
                 ],
             )

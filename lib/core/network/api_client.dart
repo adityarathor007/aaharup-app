@@ -12,15 +12,15 @@ class ApiClient {
 
   // Point this to your local FastAPI server setup
   // Use http://10.0.2.2:8000 for standard Android Emulators, or localhost for iOS Simulators
-  // static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
-  static const String baseUrl = 'http://192.168.1.20:8000/api/v1';
+  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  // static const String baseUrl = 'http://192.168.1.20:8000/api/v1';
 
   ApiClient() {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
         contentType: Headers.jsonContentType,
       ),
     );

@@ -5,6 +5,7 @@ import 'package:aaharup_app/features/auth/data/auth_providers.dart';
 import 'package:aaharup_app/features/meal_planner/data/dish_providers.dart';
 import 'package:aaharup_app/features/meal_planner/domain/dish_model.dart';
 import 'package:aaharup_app/features/meal_planner/domain/meal_plan_models.dart';
+import 'package:aaharup_app/features/meal_planner/presentation/add_dish_tab_screen.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/discovery_controller.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/dish_detail_sheet.dart';
 import 'package:aaharup_app/features/meal_planner/presentation/planner_controller.dart';
@@ -113,11 +114,19 @@ class MealPlannerScreen extends ConsumerWidget {
               // 3. HORIZONTAL CALENDAR STRIP
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: weekDays.map((day) {
+                  final now = DateTime.now();
+
                   final isSelected =
                       day.year == selectedDate.year &&
                       day.month == selectedDate.month &&
                       day.day == selectedDate.day;
+
+                  final isToday =
+                      day.year == now.year &&
+                      day.month == now.month &&
+                      day.day == now.day;
                   return GestureDetector(
                     onTap: () =>
                         ref.read(selectedDateProvider.notifier).state = day,
@@ -160,7 +169,25 @@ class MealPlannerScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        if (isToday) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Today',
+                            style: TextStyle(
+                              color: isSelected
+                                  ? AppColors.tealPrimary
+                                  : Colors.grey.shade500,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ] else ...[
+                          // Keeps layout alignment consistent across the strip row
+                          const SizedBox(height: 17),
+                        ],
                       ],
+
                     ),
                   );
                 }).toList(),
@@ -321,29 +348,27 @@ class MealPlannerScreen extends ConsumerWidget {
                                   color: AppColors.tealLight,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(
-                                  '${meal.calories.toInt()} kcal',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.tealPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 12,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(
+                                      // '${meal.calories.toInt()} kcal',
+                                      '${meal.prepTimeMinutes}m',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.tealPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              Icon(
-                                Icons.access_time,
-                                size: 12,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${meal.prepTimeMinutes}m',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
                             ],
                           ),
                         ],
@@ -424,7 +449,7 @@ class MealPlannerScreen extends ConsumerWidget {
 
                 // 3. Navigate to your Netflix-style discovery screen
                 // Assuming your GoRouter path is configured as '/discovery'
-                context.push('/discovery');
+                context.push('/add-dish');
               },
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 64),

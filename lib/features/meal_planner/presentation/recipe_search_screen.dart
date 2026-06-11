@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class DiscoveryFeedWidget extends ConsumerWidget {
+class RecipeSearchListWidget extends ConsumerWidget {
   // 1. Declare a top-level or class-level nullable timer reference variable
-  const DiscoveryFeedWidget({super.key});
+  const RecipeSearchListWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,19 +26,15 @@ class DiscoveryFeedWidget extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: (){
-            if(isSearchActive){
-              // If search is active, back button exits search mode first
+        leading: isSearchActive
+        ? IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
               ref.read(isSearchActiveProvider.notifier).state = false;
               ref.read(dishSearchQueryProvider.notifier).state = '';
-            }
-            else{
-              context.pop();
-            }
-          }
-        ),
+            },
+          )
+        : null,
 
         title: isSearchActive
             ? TextField(
@@ -64,7 +60,7 @@ class DiscoveryFeedWidget extends ConsumerWidget {
                   });
                 }
             )
-            : const Text('Choose a Dish'),
+            : null,
 
         actions: [
         // DYNAMIC ICON BUTTON: Shows magnifying glass or clear button
