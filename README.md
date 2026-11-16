@@ -2,6 +2,9 @@
 
 > An AI-powered meal planning app built for Indian households. Plan your weekly meals, get intelligent dish suggestion, and generate grocery lists — all in one place.
 
+## Demo
+
+https://github.com/user-attachments/assets/019a1c89-4e8d-4a1c-83d4-4de2e485ed55
 ---
 
 ## What the app does
